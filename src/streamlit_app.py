@@ -22,40 +22,20 @@ from schema.task_data import TaskData, TaskDataStatus
 # The app heavily uses AgentClient to interact with the agent's FastAPI endpoints.
 
 
-APP_TITLE = "Agent Service Toolkit"
-APP_ICON = "🧰"
 
 
 async def main() -> None:
     st.set_page_config(
-        page_title=APP_TITLE,
-        page_icon=APP_ICON,
         menu_items={},
     )
 
-    # Hide the streamlit upper-right chrome
-    st.html(
-        """
-        <style>
-        [data-testid="stStatusWidget"] {
-                visibility: hidden;
-                height: 0%;
-                position: fixed;
-            }
-        </style>
-        """,
-    )
-    if st.get_option("client.toolbarMode") != "minimal":
-        st.set_option("client.toolbarMode", "minimal")
-        await asyncio.sleep(0.1)
-        st.rerun()
 
     if "agent_client" not in st.session_state:
         load_dotenv()
         agent_url = os.getenv("AGENT_URL")
         if not agent_url:
             host = os.getenv("HOST", "0.0.0.0")
-            port = os.getenv("PORT", 80)
+            port = os.getenv("PORT", 7000)
             agent_url = f"http://{host}:{port}"
         try:
             with st.spinner("Connecting to agent service..."):
@@ -79,20 +59,17 @@ async def main() -> None:
 
     # Config options
     with st.sidebar:
-        st.header(f"{APP_ICON} {APP_TITLE}")
-        ""
-        "Full toolkit for running an AI agent service built with LangGraph, FastAPI and Streamlit"
-        with st.popover(":material/settings: Settings", use_container_width=True):
-            model_idx = agent_client.info.models.index(agent_client.info.default_model)
-            model = st.selectbox("LLM to use", options=agent_client.info.models, index=model_idx)
-            agent_list = [a.key for a in agent_client.info.agents]
-            agent_idx = agent_list.index(agent_client.info.default_agent)
-            agent_client.agent = st.selectbox(
-                "Agent to use",
-                options=agent_list,
-                index=agent_idx,
-            )
-            use_streaming = st.toggle("Stream results", value=True)
+        st.title("Agent Toolkit")
+        model_idx = agent_client.info.models.index(agent_client.info.default_model)
+        model = st.selectbox("LLM to use", options=agent_client.info.models, index=model_idx)
+        agent_list = [a.key for a in agent_client.info.agents]
+        agent_idx = agent_list.index(agent_client.info.default_agent)
+        agent_client.agent = st.selectbox(
+            "Agent to use",
+            options=agent_list,
+            index=agent_idx,
+        )
+        use_streaming = st.toggle("Stream results", value=True)
 
         @st.dialog("Architecture")
         def architecture_dialog() -> None:
